@@ -10,22 +10,16 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [socket, setSocket] = useState(null);
 
-  // Connect to Socket.io
   useEffect(() => {
     if (user) {
-      const newSocket = io('http://localhost:5000', {
+      const newSocket = io(process.env.REACT_APP_API_URL, {
         auth: { userId: user._id },
         withCredentials: true
       });
 
       newSocket.on('notification', (data) => {
-        setNotifications((prev) => [
-          {
-            id: Date.now(),
-            postId: data.postId,
-            postTitle: data.postTitle || 'New Post',
-            timestamp: new Date(),
-          },
+        setNotifications(prev => [
+          { ...data, id: Date.now() },
           ...prev
         ]);
       });
@@ -35,20 +29,20 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Fetch unseen notifications
   useEffect(() => {
-    const fetchUnseen = async () => {
-      if (user) {
-        const res = await axios.get('http://localhost:5000/api/notifications', { withCredentials: true });
+    if (user) {
+      axios.get(`${process.env.REACT_APP_API_URL}/api/notifications`, {
+        withCredentials: true
+      }).then(res => {
         setNotifications(res.data.notifications);
-      }
-    };
-    fetchUnseen();
+      });
+    }
   }, [user]);
 
-  // Mark as seen (e.g., when dropdown opens)
   const markAllAsSeen = async () => {
-    await axios.patch('http://localhost:5000/api/notifications/mark-seen', {}, { withCredentials: true });
+    await axios.patch(`${process.env.REACT_APP_API_URL}/api/notifications/mark-seen`, {}, {
+      withCredentials: true
+    });
     setNotifications([]);
   };
 

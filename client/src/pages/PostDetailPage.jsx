@@ -18,17 +18,15 @@ function PostDetailPage() {
       try {
         const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/posts/${id}`);
         setPost(res.data);
-        setLoading(false);
-
         if (user && res.data.author._id !== user._id) {
           const subs = await axios.get(`${process.env.REACT_APP_API_URL}/api/subscriptions`, {
             withCredentials: true
           });
-          const isSubbed = subs.data.subscriptions.some(sub => sub.id === res.data.author._id);
-          setSubscribed(isSubbed);
+          setSubscribed(subs.data.subscriptions.some(sub => sub.id === res.data.author._id));
         }
       } catch (err) {
         console.error(err);
+      } finally {
         setLoading(false);
       }
     };
@@ -48,12 +46,11 @@ function PostDetailPage() {
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to update subscription');
+      alert('Subscription update failed');
     }
   };
 
   if (loading) return <Spinner animation="border" />;
-
   if (!post) return <p>Post not found.</p>;
 
   return (
@@ -64,7 +61,6 @@ function PostDetailPage() {
           By <Link to={`/author/${post.author._id}`}>{post.author.name}</Link>
         </Card.Subtitle>
         <Card.Text className="mt-3">{post.content}</Card.Text>
-
         {!isAuthor && user && (
           <Button
             variant={subscribed ? 'secondary' : 'primary'}

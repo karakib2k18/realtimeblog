@@ -9,27 +9,17 @@ import {
 
 const router = express.Router();
 
-// Local login
 router.post('/login', handleLogin);
-
-// Register
 router.post('/register', handleRegister);
+router.post('/logout', handleLogout);
+router.get('/user', getCurrentUser);
 
-// Logout
-router.get('/logout', handleLogout);
-
-// Get current logged-in user (for frontend)
-router.get('/me', getCurrentUser);
-
-// Google Auth
+// Google OAuth
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-// Google Auth Callback
-router.get(
-  '/google/callback',
+router.get('/google/callback',
   passport.authenticate('google', {
-    successRedirect: 'http://localhost:3000/',
-    failureRedirect: 'http://localhost:3000/login',
+    successRedirect: process.env.FRONTEND_URL,
+    failureRedirect: `${process.env.FRONTEND_URL}/login`
   })
 );
 

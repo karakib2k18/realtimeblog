@@ -1,77 +1,44 @@
 import React, { useState } from 'react';
-import { Form, Button, Alert } from 'react-bootstrap';
-import { loginSchema } from '../validations/loginSchema';
-import { useAuth } from '../context/AuthContext';
+import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 function LoginPage() {
-  const { login } = useAuth();
+  const { setUser } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
-  const [formError, setFormError] = useState('');
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const validate = () => {
-    const { error } = loginSchema.validate(formData, { abortEarly: false });
-    if (!error) return null;
-
-    const newErrors = {};
-    error.details.forEach((detail) => {
-      newErrors[detail.path[0]] = detail.message;
-    });
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    if (validationErrors) {
-      setErrors(validationErrors);
-      return;
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
+        email,
+        password
+      }, { withCredentials: true });
+      setUser(res.data.user);
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Login failed');
     }
-
-    // Simulate login (replace with real API call)
-    login({ name: 'Demo User', email: formData.email, image: null });
-    navigate('/');
   };
 
   return (
-    <div className="mx-auto" style={{ maxWidth: 400 }}>
-      <h3 className="mb-4">Login</h3>
-      {formError && <Alert variant="danger">{formError}</Alert>}
+    <div style={{ maxWidth: 400, margin: 'auto' }}>
+      <h3>Login</h3>
+      {error && <div className="alert alert-danger">{error}</div>}
       <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="email" className="mb-3">
-          <Form.Label>Email address</Form.Label>
-          <Form.Control
-            type="email"
-            name="email"
-            placeholder="Enter email"
-            value={formData.email}
-            onChange={handleChange}
-            isInvalid={!!errors.email}
-          />
-          <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+        <Form.Group className="mb-3">
+          <Form.Label>Email</Form.Label>
+          <Form.Control type="email" value={email} onChange={e => setEmail(e.target.value)} required />
         </Form.Group>
-
-        <Form.Group controlId="password" className="mb-3">
+        <Form.Group className="mb-3">
           <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            isInvalid={!!errors.password}
-          />
-          <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+          <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </Form.Group>
-
-        <Button variant="primary" type="submit" className="w-100">Login</Button>
+        <Button type="submit">Login</Button>
       </Form>
     </div>
   );

@@ -1,20 +1,14 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  name: { type: String },
+  googleId: { type: String },
+  name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String }, // only for local login
-  googleId: { type: String }, // only for Google login
-  image: { type: String }
+  password: { type: String }, // only for local accounts
+  profilePic: { type: String },
+}, {
+  timestamps: true
 });
 
-// Compare password for local login
-userSchema.methods.comparePassword = function (candidatePassword) {
-  if (!this.password) return false;
-  return bcrypt.compare(candidatePassword, this.password);
-};
-
 const User = mongoose.model('User', userSchema);
-
 export default User;

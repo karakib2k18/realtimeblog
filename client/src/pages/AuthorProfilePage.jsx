@@ -7,12 +7,10 @@ import { useAuth } from '../context/AuthContext';
 function AuthorProfilePage() {
   const { authorId } = useParams();
   const { user } = useAuth();
-
   const [posts, setPosts] = useState([]);
   const [author, setAuthor] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
-
   const isSelf = user && user._id === authorId;
 
   useEffect(() => {
@@ -22,13 +20,11 @@ function AuthorProfilePage() {
         const authorPosts = res.data.filter(post => post.author._id === authorId);
         setPosts(authorPosts);
         setAuthor(authorPosts[0]?.author || null);
-
         if (user && authorId !== user._id) {
           const subRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/subscriptions`, {
             withCredentials: true
           });
-          const isSubbed = subRes.data.subscriptions.some(sub => sub.id === authorId);
-          setSubscribed(isSubbed);
+          setSubscribed(subRes.data.subscriptions.some(sub => sub.id === authorId));
         }
       } catch (err) {
         console.error(err);
@@ -60,10 +56,7 @@ function AuthorProfilePage() {
 
   return (
     <div>
-      <h3>
-        {author ? author.name : 'Author'}'s Posts ({posts.length})
-      </h3>
-
+      <h3>{author ? author.name : 'Author'}'s Posts ({posts.length})</h3>
       {!isSelf && user && (
         <Button
           onClick={handleToggleSubscription}
@@ -74,7 +67,6 @@ function AuthorProfilePage() {
           {subscribed ? 'Unsubscribe' : 'Subscribe'}
         </Button>
       )}
-
       {posts.map(post => (
         <Card key={post._id} className="mb-3">
           <Card.Body>

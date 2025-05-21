@@ -2,8 +2,7 @@ import { Server } from 'socket.io';
 import Notification from './models/Notification.js';
 import Subscription from './models/Subscription.js';
 
-// 🔁 Exported so controllers can access sockets
-export const connectedUsers = new Map(); // userId → socket.id
+export const connectedUsers = new Map();
 export let ioInstance = null;
 
 export default function setupSocket(server) {
@@ -26,22 +25,23 @@ export default function setupSocket(server) {
       connectedUsers.delete(userId);
     });
 
-    // Optional: keep this if you want clients to emit "new_post" manually
     socket.on('new_post', async ({ authorId, postId }) => {
       const subs = await Subscription.find({ targetUserId: authorId });
 
       for (const sub of subs) {
-        const notif = new Notification({
+        await Notification.create({
           recipientId: sub.subscriberId,
-          postId
+          postId,
+          seen: false,
+          createdAt: new Date()
         });
-        await notif.save();
 
         const recipientSocket = connectedUsers.get(sub.subscriberId.toString());
         if (recipientSocket) {
           io.to(recipientSocket).emit('notification', {
             postId,
-            message: 'New post available!'
+            postTitle: 'New post',
+            timestamp: new Date()
           });
         }
       }

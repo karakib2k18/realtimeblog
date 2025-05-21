@@ -1,95 +1,47 @@
 import React, { useState } from 'react';
-import { Form, Button, Alert } from 'react-bootstrap';
-import { registerSchema } from '../validations/registerSchema';
-import { useAuth } from '../context/AuthContext';
+import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function RegisterPage() {
-  const { login } = useAuth();
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-
-  const [errors, setErrors] = useState({});
-  const [formError, setFormError] = useState('');
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const validate = () => {
-    const { error } = registerSchema.validate(formData, { abortEarly: false });
-    if (!error) return null;
-
-    const newErrors = {};
-    error.details.forEach((detail) => {
-      newErrors[detail.path[0]] = detail.message;
-    });
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    if (validationErrors) {
-      setErrors(validationErrors);
-      return;
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/register`, form, {
+        withCredentials: true
+      });
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Registration failed');
     }
-
-    // Simulate successful registration
-    login({ name: 'New User', email: formData.email, image: null });
-    navigate('/');
   };
 
   return (
-    <div className="mx-auto" style={{ maxWidth: 400 }}>
-      <h3 className="mb-4">Register</h3>
-      {formError && <Alert variant="danger">{formError}</Alert>}
+    <div style={{ maxWidth: 400, margin: 'auto' }}>
+      <h3>Register</h3>
+      {error && <div className="alert alert-danger">{error}</div>}
       <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="email" className="mb-3">
-          <Form.Label>Email address</Form.Label>
-          <Form.Control
-            type="email"
-            name="email"
-            placeholder="Enter email"
-            value={formData.email}
-            onChange={handleChange}
-            isInvalid={!!errors.email}
-          />
-          <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+        <Form.Group className="mb-3">
+          <Form.Label>Name</Form.Label>
+          <Form.Control name="name" value={form.name} onChange={handleChange} required />
         </Form.Group>
-
-        <Form.Group controlId="password" className="mb-3">
+        <Form.Group className="mb-3">
+          <Form.Label>Email</Form.Label>
+          <Form.Control name="email" value={form.email} onChange={handleChange} required />
+        </Form.Group>
+        <Form.Group className="mb-3">
           <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            isInvalid={!!errors.password}
-          />
-          <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+          <Form.Control name="password" type="password" value={form.password} onChange={handleChange} required />
         </Form.Group>
-
-        <Form.Group controlId="confirmPassword" className="mb-3">
-          <Form.Label>Confirm Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            isInvalid={!!errors.confirmPassword}
-          />
-          <Form.Control.Feedback type="invalid">{errors.confirmPassword}</Form.Control.Feedback>
-        </Form.Group>
-
-        <Button variant="primary" type="submit" className="w-100">Register</Button>
+        <Button type="submit">Sign Up</Button>
       </Form>
     </div>
   );

@@ -12,9 +12,7 @@ function NotificationBell() {
 
   const handleToggle = (isOpen) => {
     setOpen(isOpen);
-    if (isOpen) {
-      markAllAsSeen();
-    }
+    if (isOpen) markAllAsSeen();
   };
 
   return (
@@ -25,7 +23,6 @@ function NotificationBell() {
           <Badge bg="danger" className="ms-1">{notifications.length}</Badge>
         )}
       </Dropdown.Toggle>
-
       <Dropdown.Menu style={{ minWidth: '300px' }}>
         {notifications.length === 0 ? (
           <Dropdown.ItemText>No new notifications</Dropdown.ItemText>

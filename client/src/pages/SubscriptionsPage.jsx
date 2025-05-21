@@ -7,18 +7,17 @@ function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchSubscriptions = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/subscriptions`, {
-        withCredentials: true
-      });
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/subscriptions`, {
+      withCredentials: true
+    }).then(res => {
       setSubscriptions(res.data.subscriptions);
-    } catch (err) {
+    }).catch(err => {
       console.error('Failed to load subscriptions:', err);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, []);
 
   const handleUnsubscribe = async (authorId) => {
     try {
@@ -31,16 +30,11 @@ function SubscriptionsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchSubscriptions();
-  }, []);
-
   if (loading) return <Spinner animation="border" />;
 
   return (
     <div>
       <h3>Subscriptions</h3>
-
       {subscriptions.length === 0 ? (
         <p>You’re not subscribed to any authors yet.</p>
       ) : (

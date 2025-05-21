@@ -1,22 +1,27 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // user = { name, email, image }
+  const [user, setUser] = useState(null);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/auth/user`, {
+      withCredentials: true,
+    })
+    .then(res => setUser(res.data.user))
+    .catch(() => setUser(null));
+  }, []);
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+    axios.post(`${process.env.REACT_APP_API_URL}/api/auth/logout`, {}, {
+      withCredentials: true,
+    }).then(() => setUser(null));
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, setUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,6 +10,6 @@ const router = express.Router();
 
 router.post('/', ensureAuthenticated, createPost);
 router.get('/', getAllPosts);
-router.get('/:id', getPostById); // ✅ NEW: Get single post
+router.get('/:id', getPostById);
 
 export default router;

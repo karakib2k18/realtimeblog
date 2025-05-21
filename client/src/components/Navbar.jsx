@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 
 function AppNavbar() {
-  const { user, logout } = useAuth(); // 🔄 pulls real user data from context
+  const { user, logout } = useAuth();
 
   return (
     <Navbar bg="light" expand="lg">
@@ -33,12 +33,8 @@ function AppNavbar() {
               </>
             ) : (
               <>
-                <Button as={Link} to="/login" variant="outline-primary" size="sm" className="me-2">
-                  Login
-                </Button>
-                <Button as={Link} to="/register" variant="primary" size="sm">
-                  Sign Up
-                </Button>
+                <Button as={Link} to="/login" variant="outline-primary" size="sm" className="me-2">Login</Button>
+                <Button as={Link} to="/register" variant="primary" size="sm">Sign Up</Button>
               </>
             )}
           </Nav>
