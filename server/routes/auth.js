@@ -9,18 +9,32 @@ import {
 
 const router = express.Router();
 
+// 🔐 Local auth
 router.post('/login', handleLogin);
 router.post('/register', handleRegister);
 router.post('/logout', handleLogout);
 router.get('/user', getCurrentUser);
 
-// Google OAuth
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// 🔐 Google OAuth login
+router.get('/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+// ✅ Google callback handler (redirects to frontend)
 router.get('/google/callback',
   passport.authenticate('google', {
-    successRedirect: process.env.FRONTEND_URL,
-    failureRedirect: `${process.env.FRONTEND_URL}/login`
+    successRedirect: 'http://localhost:3000',
+    failureRedirect: `${'http://localhost:3000'}/login`
   })
 );
+
+// Optional: get logged-in Google user as JSON
+router.get('/google/success', (req, res) => {
+  if (req.user) {
+    res.json({ user: req.user });
+  } else {
+    res.status(401).json({ user: null });
+  }
+});
 
 export default router;

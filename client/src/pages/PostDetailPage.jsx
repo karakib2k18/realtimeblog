@@ -1,78 +1,125 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Card, Button, Spinner } from 'react-bootstrap';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { Button, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
 function PostDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
+
   const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const isAuthor = user && post?.author?._id === user._id;
 
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/posts/${id}`);
-        setPost(res.data);
-        if (user && res.data.author._id !== user._id) {
-          const subs = await axios.get(`${process.env.REACT_APP_API_URL}/api/subscriptions`, {
-            withCredentials: true
-          });
-          setSubscribed(subs.data.subscriptions.some(sub => sub.id === res.data.author._id));
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPost();
-  }, [id, user]);
+  }, [id]);
 
-  const handleSubscribeToggle = async () => {
-    const url = `${process.env.REACT_APP_API_URL}/api/subscriptions/${post.author._id}`;
+  const fetchPost = async () => {
     try {
-      if (subscribed) {
-        await axios.delete(url, { withCredentials: true });
-        setSubscribed(false);
-      } else {
-        await axios.post(url, {}, { withCredentials: true });
-        setSubscribed(true);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/posts/${id}`, {
+        withCredentials: true
+      });
+      setPost(res.data);
+      setLoading(false);
+
+      // Check subscription status
+      if (user && user._id !== res.data.author._id) {
+        const subRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/subscriptions`, {
+          withCredentials: true
+        });
+        const isSubbed = subRes.data.subscriptions.some(sub => sub.id === res.data.author._id);
+        setSubscribed(isSubbed);
       }
     } catch (err) {
-      console.error(err);
-      alert('Subscription update failed');
+      console.error('Failed to load post', err);
+      setLoading(false);
     }
   };
 
-  if (loading) return <Spinner animation="border" />;
-  if (!post) return <p>Post not found.</p>;
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        await axios.delete(`${process.env.REACT_APP_API_URL}/api/posts/${id}`, {
+          withCredentials: true
+        });
+        navigate('/');
+      } catch (err) {
+        console.error('Failed to delete post', err);
+      }
+    }
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/subscriptions/${post.author._id}`, {}, {
+        withCredentials: true
+      });
+      setSubscribed(true);
+    } catch (err) {
+      console.error('Failed to subscribe', err);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/subscriptions/${post.author._id}`, {
+        withCredentials: true
+      });
+      setSubscribed(false);
+    } catch (err) {
+      console.error('Failed to unsubscribe', err);
+    }
+  };
+
+  if (loading) {
+    return <Spinner animation="border" />;
+  }
+
+  if (!post) {
+    return <p>Post not found.</p>;
+  }
 
   return (
-    <Card>
-      <Card.Body>
-        <Card.Title>{post.title}</Card.Title>
-        <Card.Subtitle className="mb-2 text-muted">
-          By <Link to={`/author/${post.author._id}`}>{post.author.name}</Link>
-        </Card.Subtitle>
-        <Card.Text className="mt-3">{post.content}</Card.Text>
-        {!isAuthor && user && (
-          <Button
-            variant={subscribed ? 'secondary' : 'primary'}
-            size="sm"
-            className="mt-3"
-            onClick={handleSubscribeToggle}
-          >
-            {subscribed ? 'Unsubscribe' : 'Subscribe'}
-          </Button>
+    <div>
+      <h2>{post.title}</h2>
+      <p>
+        by{' '}
+        <Link to={`/author/${post.author._id}`}>
+          {post.author.name}
+        </Link>{' '}
+        {!isAuthor && (
+          <>
+            {subscribed ? (
+              <Button variant="outline-secondary" size="sm" onClick={handleUnsubscribe}>
+                Unsubscribe
+              </Button>
+            ) : (
+              <Button variant="primary" size="sm" onClick={handleSubscribe}>
+                Subscribe
+              </Button>
+            )}
+          </>
         )}
-      </Card.Body>
-    </Card>
+      </p>
+      <p>{post.content}</p>
+      <p><strong>Tags:</strong> {post.tags.join(', ')}</p>
+
+      {isAuthor && (
+        <div className="mt-3">
+          <Button as={Link} to={`/editor?id=${post._id}`} variant="warning" className="me-2">
+            Edit
+          </Button>
+          <Button onClick={handleDelete} variant="danger">
+            Delete
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
 

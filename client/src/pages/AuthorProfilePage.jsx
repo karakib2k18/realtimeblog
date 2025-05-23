@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { Card, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function AuthorProfilePage() {
   const { authorId } = useParams();
@@ -28,6 +30,7 @@ function AuthorProfilePage() {
         }
       } catch (err) {
         console.error(err);
+        toast.error('Failed to load author data');
       } finally {
         setLoading(false);
       }
@@ -42,13 +45,15 @@ function AuthorProfilePage() {
       if (subscribed) {
         await axios.delete(url, { withCredentials: true });
         setSubscribed(false);
+        toast.info('Unsubscribed successfully');
       } else {
         await axios.post(url, {}, { withCredentials: true });
         setSubscribed(true);
+        toast.success('Subscribed successfully');
       }
     } catch (err) {
       console.error(err);
-      alert('Subscription action failed');
+      toast.error('Subscription action failed');
     }
   };
 
@@ -68,7 +73,7 @@ function AuthorProfilePage() {
         </Button>
       )}
       {posts.map(post => (
-        <Card key={post._id} className="mb-3">
+        <Card key={post._id} className="mb-3 animate__animated animate__fadeIn">
           <Card.Body>
             <Card.Title>{post.title}</Card.Title>
             <Card.Text>{post.content.slice(0, 100)}...</Card.Text>

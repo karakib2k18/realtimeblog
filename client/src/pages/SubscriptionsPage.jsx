@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Card, Button, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -14,6 +16,7 @@ function SubscriptionsPage() {
       setSubscriptions(res.data.subscriptions);
     }).catch(err => {
       console.error('Failed to load subscriptions:', err);
+      toast.error('Failed to load subscriptions');
     }).finally(() => {
       setLoading(false);
     });
@@ -25,8 +28,10 @@ function SubscriptionsPage() {
         withCredentials: true
       });
       setSubscriptions(prev => prev.filter(sub => sub.id !== authorId));
+      toast.info('Unsubscribed successfully');
     } catch (err) {
       console.error('Failed to unsubscribe:', err);
+      toast.error('Unsubscribe failed');
     }
   };
 

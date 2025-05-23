@@ -26,7 +26,16 @@ function AppNavbar() {
             {user ? (
               <>
                 <NotificationBell />
-                <Navbar.Text className="mx-2">
+                <Navbar.Text className="mx-2 d-flex align-items-center">
+                  {user.image && (
+                    <img
+                      src={user.image}
+                      alt="Profile"
+                      width="30"
+                      height="30"
+                      className="rounded-circle me-2"
+                    />
+                  )}
                   {user.name}
                 </Navbar.Text>
                 <Button onClick={logout} size="sm" variant="outline-danger">Logout</Button>

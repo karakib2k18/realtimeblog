@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String }, // only for local accounts
-  profilePic: { type: String },
+  image: { type: String }     // ✅ Google profile picture
 }, {
   timestamps: true
 });

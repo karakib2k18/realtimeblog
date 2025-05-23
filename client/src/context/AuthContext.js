@@ -8,12 +8,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/auth/user`, {
-      withCredentials: true,
+      withCredentials: true
     })
-    .then(res => setUser(res.data.user))
-    .catch(() => setUser(null));
+      .then(res => setUser(res.data.user))
+      .catch(() => setUser(null)); // ✅ Safely reset user on 401
   }, []);
-
+  
   const logout = () => {
     axios.post(`${process.env.REACT_APP_API_URL}/api/auth/logout`, {}, {
       withCredentials: true,

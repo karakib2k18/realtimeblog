@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { registerSchema } from '../validations/registerSchema';
 
 function RegisterPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+
+  // ✅ Redirect if already logged in
+  useEffect(() => {
+    if (user) navigate('/');
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -15,13 +23,22 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/register`, form, {
+      const validated = await registerSchema.validateAsync(form);
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/register`, validated, {
         withCredentials: true
       });
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      if (err.isJoi) {
+        setError(err.message);
+      } else {
+        setError(err.response?.data?.error || 'Registration failed');
+      }
     }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/google`;
   };
 
   return (
@@ -41,7 +58,10 @@ function RegisterPage() {
           <Form.Label>Password</Form.Label>
           <Form.Control name="password" type="password" value={form.password} onChange={handleChange} required />
         </Form.Group>
-        <Button type="submit">Sign Up</Button>
+        <Button type="submit" variant="primary" className="w-100">Sign Up</Button>
+        <Button variant="danger" onClick={handleGoogleLogin} className="mt-2 w-100">
+          Sign in with Google
+        </Button>
       </Form>
     </div>
   );
